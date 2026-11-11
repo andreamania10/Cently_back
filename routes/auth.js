@@ -1,22 +1,35 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { body } = require("express-validator");
 const pool = require("../config/db");
-require("dotenv").config();
+const validate = require("../middleware/validate");
+require("dotenv").config({ quiet: true });
 
 const router = express.Router();
 
+const registerRules = [
+  body("name").trim().notEmpty().withMessage("El nom és obligatori")
+    .isLength({ max: 100 }).withMessage("El nom és massa llarg (màxim 100 caràcters)"),
+  body("email").trim().isEmail().withMessage("Correu electrònic invàlid")
+    .isLength({ max: 150 }).withMessage("El correu és massa llarg"),
+  body("password").isString().isLength({ min: 6 })
+    .withMessage("La contrasenya ha de tenir mínim 6 caràcters")
+];
+
+const loginRules = [
+  body("email").trim().isEmail().withMessage("Correu electrònic invàlid"),
+  body("password").isString().notEmpty().withMessage("Falta la contrasenya")
+];
+
+function signToken(userId) {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+}
+
 // --- Registre ---
-router.post("/register", async (req, res) => {
+router.post("/register", registerRules, validate, async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "Falten dades" });
-    }
-    if (password.length < 6) {
-      return res.status(400).json({ error: "La contrasenya ha de tenir mínim 6 caràcters" });
-    }
 
     const [existing] = await pool.query("SELECT id FROM users WHERE email = ?", [email]);
     if (existing.length > 0) {
@@ -30,9 +43,7 @@ router.post("/register", async (req, res) => {
     );
 
     const user = { id: result.insertId, name, email };
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
-    res.json({ token, user });
+    res.json({ token: signToken(user.id), user });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error del servidor" });
@@ -40,12 +51,9 @@ router.post("/register", async (req, res) => {
 });
 
 // --- Login ---
-router.post("/login", async (req, res) => {
+router.post("/login", loginRules, validate, async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: "Falten dades" });
-    }
 
     const [rows] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
     if (rows.length === 0) {
@@ -59,9 +67,7 @@ router.post("/login", async (req, res) => {
     }
 
     const user = { id: dbUser.id, name: dbUser.name, email: dbUser.email };
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
-    res.json({ token, user });
+    res.json({ token: signToken(user.id), user });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error del servidor" });

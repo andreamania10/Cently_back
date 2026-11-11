@@ -1,5 +1,5 @@
 const mysql = require("mysql2/promise");
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
@@ -7,7 +7,8 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD || "",
   database: process.env.DB_NAME || "pressupost",
   waitForConnections: true,
-  connectionLimit: 10
+  connectionLimit: 10,
+  decimalNumbers: true // DECIMAL i SUM() arriben com a number, no com a string
 });
 
 module.exports = pool;
