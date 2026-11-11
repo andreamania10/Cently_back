@@ -20,6 +20,13 @@ describe("GET /api/analytics", () => {
     expect(execFile.mock.calls[0][1].slice(1)).toEqual(["4", "all"]);
   });
 
+  it("accepta un any sencer", async () => {
+    execFile.mockImplementation((bin, args, opts, cb) => cb(null, "{}", ""));
+    const res = await request(app).get("/api/analytics?month=2026").set(auth);
+    expect(res.status).toBe(200);
+    expect(execFile.mock.calls[0][1][2]).toBe("2026");
+  });
+
   it("rebutja un mes mal format sense executar Python", async () => {
     const res = await request(app).get("/api/analytics?month=2024;rm").set(auth);
     expect(res.status).toBe(400);

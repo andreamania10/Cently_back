@@ -14,7 +14,8 @@ const SCRIPT = path.join(__dirname, "..", "analytics", "report.py");
 // Anàlisi de despeses amb pandas: percentatge per categoria + total per mes, amb gràfics
 router.get(
   "/",
-  query("month").optional().matches(/^(all|\d{4}-\d{2})$/).withMessage("Mes invàlid"),
+  // all = tot, YYYY = un any, YYYY-MM = un mes
+  query("month").optional().matches(/^(all|\d{4}|\d{4}-\d{2})$/).withMessage("Període invàlid"),
   validate,
   (req, res) => {
     const month = req.query.month || "all";

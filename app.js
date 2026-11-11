@@ -7,6 +7,7 @@ const categoryRoutes = require("./routes/categories");
 const expenseRoutes = require("./routes/expenses");
 const historyRoutes = require("./routes/history");
 const analyticsRoutes = require("./routes/analytics");
+const incomeRoutes = require("./routes/incomes");
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/incomes", incomeRoutes);
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 

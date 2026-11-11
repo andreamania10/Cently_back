@@ -8,7 +8,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || "pressupost",
   waitForConnections: true,
   connectionLimit: 10,
-  decimalNumbers: true // DECIMAL i SUM() arriben com a number, no com a string
+  decimalNumbers: true, // DECIMAL i SUM() arriben com a number, no com a string
+  dateStrings: ["DATE"] // les DATE arriben com a "2026-10-12", sense desfasaments de zona horària
 });
 
 module.exports = pool;

@@ -1,7 +1,7 @@
 """
 Anàlisi de despeses d'un usuari amb pandas.
 
-Ús:  python analytics/report.py <user_id> [all|YYYY-MM]
+Ús:  python analytics/report.py <user_id> [all|YYYY|YYYY-MM]
 
 Escriu per stdout un JSON amb:
   - months:      mesos amb despeses (més recent primer)
@@ -100,7 +100,7 @@ def chart_categories(by_cat: pd.Series, pct: pd.Series) -> str:
 def chart_monthly(monthly: pd.Series, highlight: str) -> str:
     """Total gastat per mes; si hi ha un mes seleccionat, es destaca."""
     fig, ax = plt.subplots(figsize=(7, 3.2))
-    colors = [BAR if highlight in ("all", m) else "#b7d3f6" for m in monthly.index]
+    colors = [BAR if highlight in ("all", m) or len(highlight) == 4 else "#b7d3f6" for m in monthly.index]
     ax.bar(monthly.index, monthly.values, color=colors, width=0.6)
     ax.yaxis.grid(True, color=GRID, linewidth=0.8)
     ax.set_axisbelow(True)
@@ -115,14 +115,16 @@ def chart_monthly(monthly: pd.Series, highlight: str) -> str:
 def main() -> None:
     user_id = int(sys.argv[1])
     month = sys.argv[2] if len(sys.argv) > 2 else "all"
-    if month != "all" and not re.fullmatch(r"\d{4}-\d{2}", month):
-        raise ValueError("Mes invàlid")
+    if month != "all" and not re.fullmatch(r"\d{4}(-\d{2})?", month):
+        raise ValueError("Període invàlid")
 
     df = load_expenses(user_id)
     months = sorted(df["month"].unique().tolist(), reverse=True)
+    if len(month) == 4:  # un any sencer: el gràfic mensual només mostra aquell any
+        df = df[df["month"].str.startswith(month)]
     monthly = df.groupby("month")["amount"].sum().sort_index()
 
-    view = df if month == "all" else df[df["month"] == month]
+    view = df if month == "all" or len(month) == 4 else df[df["month"] == month]
     total = float(view["amount"].sum())
 
     result = {

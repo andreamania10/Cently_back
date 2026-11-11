@@ -26,6 +26,19 @@ CREATE TABLE IF NOT EXISTS expenses (
   category_id INT NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
   description VARCHAR(255),
-  date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+  date DATE NOT NULL,                                     -- dia en què es va gastar (el tria l'usuari)
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, -- quan es va apuntar a l'app
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
+  INDEX idx_expenses_cat_date (category_id, date)
+);
+
+CREATE TABLE IF NOT EXISTS incomes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  description VARCHAR(255),
+  date DATE NOT NULL,                                      -- el dia que entra (el del calendari)
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- quan es va apuntar a l'app
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_incomes_user_date (user_id, date)
 );
